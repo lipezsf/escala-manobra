@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Sequência de Datas e Horários</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        label {
+            font-size: 0.65em; /* Tamanho da fonte reduzido */
+            margin-bottom: 1px; /* Margem reduzida */
+        }
+        input {
+            margin: 1px 0;
+            padding: 2px;
+            width: 100px; /* Largura fixa reduzida */
+            font-size: 0.65em; /* Tamanho da fonte reduzido */
+            box-sizing: border-box;
+        }
+        .result {
+            margin-top: 10px; /* Margem superior aumentada para separar da entrada */
+            width: 100%;
+        }
+        .error {
+            color: red;
+            font-size: 0.6em; /* Tamanho da fonte reduzido */
+            margin-top: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.6em; /* Tamanho da fonte reduzido */
+            margin: 0 auto;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 2px; /* Padding reduzido */
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <label for="data">Data:</label>
+    <input type="date" id="data">
+    <label for="escala">Escala (HH:MM):</label>
+    <input type="text" id="escala" placeholder="HH:MM">
+    <div class="error" id="error"></div>
+    <div class="result" id="result"></div>
+
+    <script>
+        document.getElementById('data').addEventListener('input', gerarSequencia);
+        document.getElementById('escala').addEventListener('input', gerarSequencia);
+
+        function gerarSequencia() {
+            const dataInput = document.getElementById('data').value;
+            const escalaInput = document.getElementById('escala').value;
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+
+            // Verifica se o campo "escala" está no formato correto
+            const regexHora = /^([01]\d|2[0-3]):([0-5]\d)$/;
+            if (!escalaInput.match(regexHora)) {
+                errorDiv.innerHTML = 'O campo "escala" deve estar no formato HH:MM.';
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            errorDiv.innerHTML = '';
+
+            if (!dataInput || !escalaInput) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            const dataInicial = new Date(dataInput + 'T00:00:00-03:00'); // Ajuste para o fuso horário de São Paulo
+            const ano = dataInicial.getFullYear();
+            const dataFinal = new Date(`December 31, ${ano} 23:59:59 GMT-0300`);
+            const horarios = [
+                "07:00", "07:01", "19:00", "19:01", "Fora de escala",
+                "Folga", "Folga", "Folga"
+            ];
+
+            let dataAtual = new Date(dataInput + 'T00:00:00-03:00'); // Ajuste para o fuso horário de São Paulo
+            let horarioIndex = horarios.indexOf(escalaInput);
+
+            if (horarioIndex === -1) {
+                errorDiv.innerHTML = 'O valor digitado no campo "escala" deve ser um dos horários predefinidos.';
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            let resultado = '<table><tr><th>Data</th><th>Dia</th><th>Horário</th></tr>';
+
+            // Geração da sequência
+            while (dataAtual <= dataFinal) {
+                const diaDaSemana = dataAtual.toLocaleDateString('pt-BR', { weekday: 'short' });
+                resultado += `<tr><td>${dataAtual.toLocaleDateString('pt-BR')}</td><td>${diaDaSemana}</td><td>${horarios[horarioIndex]}</td></tr>`;
+                
+                // Avança a data em 1 dia
+                dataAtual.setDate(dataAtual.getDate() + 1);
+
+                // Avança no array de horários
+                horarioIndex++;
+                if (horarioIndex >= horarios.length) {
+                    horarioIndex = 0;
+                }
+            }
+
+            resultado += '</table>';
+            resultDiv.innerHTML = resultado;
+        }
+    </script>
+</body>
+</html>
